@@ -14,11 +14,6 @@ You can install the ML4W Dotfiles for Hyprland with the Dotfiles Installer (Avai
 
 Copy the following url into the Dotfiles Installer and start the installation.
 
-#### Stable Release
-
-```
-https://raw.githubusercontent.com/mylinuxforwork/dotfiles/main/hyprland-dotfiles-stable.dotinst
-```
 #### Rolling Release
 
 ```

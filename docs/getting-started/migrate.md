@@ -23,11 +23,6 @@ flatpak run com.ml4w.dotfilesinstaller
 
 Copy the following url into the Dotfiles Installer and click on Load.
 
-#### Stable Release
-
-```sh
-https://raw.githubusercontent.com/mylinuxforwork/dotfiles/main/hyprland-dotfiles-stable.dotinst
-```
 #### Rolling Release
 
 ```sh
