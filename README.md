@@ -22,6 +22,31 @@ https://raw.githubusercontent.com/mylinuxforwork/dotfiles/main/hyprland-dotfiles
 Setup scripts to install the required dependencies are included for <i class="devicon-archlinux-plain"></i> **Arch, <i class="devicon-fedora-plain"></i> Fedora and <i class="devicon-opensuse-plain"></i> openSuse Tumbleweed**.<br>
 For other distros, please install <a href="https://mylinuxforwork.github.io/dotfiles/getting-started/dependencies" target="_blank">the dependencies</a> first.
 
+## Installation with GNU stow
+
+The installation without the Dotfiles Installer is possible but not recommended (especially not for beginners). 
+
+> [!NOTE]
+> Please create a backup from your current configuration. This guide is under developement
+
+The manual installation requires stow. Please install it on your system e.g., on Arch with
+
+```sh 
+sudo pacman -S stow
+```
+
+Please follow the following steps:
+
+```sh 
+mkdir -p ~/Projects # Create a projects folder 
+git clone --depth 1 https://github.com/corazon008/dotfiles # Rolling Release
+cd ~/Projects/dotfiles/setup # cd into the setup folder
+./setup.sh # Run the setup script to install the dependencies
+./install.sh # Run the install script to make the symlinks
+```
+
+Restart your system.
+
 ## Inspirations
 
 The following projects have inspired me:
