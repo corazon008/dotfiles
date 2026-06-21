@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-#                                 __        __ 
+#                                 __        __
 #   ___ ___________ ___ ___  ___ / /  ___  / /_
 #  (_-</ __/ __/ -_) -_) _ \(_-</ _ \/ _ \/ __/
-# /___/\__/_/  \__/\__/_//_/___/_//_/\___/\__/ 
-#                                              
+# /___/\__/_/  \__/\__/_//_/___/_//_/\___/\__/
+#
 # Based on https://github.com/hyprwm/contrib/blob/main/grimblast/screenshot.sh
 
 # -----------------------------------------------------
@@ -87,14 +87,6 @@ take_instant_area() {
     [[ -f "$HOME/$NAME" && -d "$screenshot_folder" && -w "$screenshot_folder" ]] && mv "$HOME/$NAME" "$screenshot_folder/"
 }
 
-# Handle instant flags
-if [[ "$1" == "--instant" ]]; then
-    take_instant_full
-    exit 0
-elif [[ "$1" == "--instant-area" ]]; then
-    take_instant_area
-    exit 0
-fi
 
 # Options
 option_1="Immediate"
@@ -289,6 +281,19 @@ run_cmd() {
         copy_save_editor_run "takescreenshot_timer"
     fi
 }
+
+# Handle instant flags
+if [[ "$1" == "--instant" ]]; then
+    option_chosen="copysave"
+    option_type_screenshot="screen"
+    takescreenshot
+    exit 0
+elif [[ "$1" == "--instant-area" ]]; then
+    option_chosen="copysave"
+    option_type_screenshot="area"
+    takescreenshot
+    exit 0
+fi
 
 # Actions
 chosen="$(run_rofi)"
