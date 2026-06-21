@@ -16,11 +16,10 @@
     "modules-left": [
         "custom/appmenu",
         "hyprland/workspaces",
-        //"group/links",
-        //"wlr/taskbar",
         "pulseaudio",
         "backlight",
         "custom/wg",
+        "hyprland/language",
         "custom/empty"
     ],
 

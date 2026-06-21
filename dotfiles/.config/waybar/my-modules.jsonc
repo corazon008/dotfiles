@@ -45,6 +45,12 @@
     "format": "/   {temperatureC}°C",
   },
 
+  "hyprland/language": {
+    "format": "{short}",
+    "on-scroll-up": "true",
+    "on-scroll-down": "true",
+  },
+
   // Group Hardware
   "group/hardware": {
     "orientation": "inherit",
