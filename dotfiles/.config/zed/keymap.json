@@ -1,0 +1,80 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "shift shift": "file_finder::Toggle",
+      "ctrl-t": "workspace::ToggleBottomDock",
+      "ctrl-shift-t": "workspace::NewTerminal",
+    },
+  },
+  {
+    "context": "Editor && vim_mode == insert",
+    "bindings": {
+      // "j k": "vim::NormalBefore"
+    },
+  },
+
+  // Run python file
+  /*{
+    "context": "Editor && file_extension == \"py\"",
+    "bindings": {
+      "ctrl-shift-r": ["task::Spawn", { "task_name": "r/python" }],
+    },
+  },*/
+
+  {
+    "context": "Editor",
+    "bindings": {
+      "ctrl-alt-l": "editor::Format",
+      "ctrl-shift-r": "editor::Rename",
+      "ctrl-d": "editor::DuplicateLineDown",
+    },
+  },
+
+  {
+    "context": "Editor && extension == svg",
+    "use_key_equivalents": true,
+    "bindings": {
+      "cmd-k v": "svg::OpenPreviewToTheSide",
+      "cmd-shift-v": "svg::OpenPreview",
+    },
+  },
+
+  {
+    "context": "Editor && extension == py",
+    "bindings": {
+      "ctrl-r": ["task::Spawn", { "task_name": "r/python" }],
+    },
+  },
+  {
+    "context": "Editor && extension == cpp",
+    "bindings": {
+      "ctrl-r": ["task::Spawn", { "task_name": "r/cpp" }],
+    },
+  },
+  {
+    "context": "Editor && extension == c",
+    "bindings": {
+      "ctrl-r": ["task::Spawn", { "task_name": "r/c" }],
+    },
+  },
+  {
+    "context": "(Editor && !edit_prediction)",
+    "bindings": {
+      "alt-divide": "editor::ShowEditPrediction"
+    }
+  },
+  {
+    "context": "Editor",
+      "bindings": {
+      "alt-p": "editor::InsertSnippet"
+    }
+  }
+]
