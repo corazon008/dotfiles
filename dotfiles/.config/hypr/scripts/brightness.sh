@@ -29,8 +29,11 @@ get)
 ;;
 
 get-display)
-    ddcutil --display "$2" getvcp 10 \
-    | grep -oP 'current value =\s*\K\d+'
+    if [ "$MODE" = "backlight" ]; then
+        brightnessctl -m | awk -F, '{gsub("%","",$4); print $4}'
+    else
+        ddcutil --display "$2" getvcp 10 | grep -oP 'current value =\s*\K\d+'
+    fi
 ;;
 
 set)
@@ -60,17 +63,25 @@ set-percentage)
 ;;
 
 set-display)
-    ddcutil --display "$2" setvcp 10 "$3"
+    if [ "$MODE" = "backlight" ]; then
+        brightnessctl set "$3%"
+    else
+        ddcutil --display "$2" setvcp 10 "$3"
+    fi
 ;;
 
 set-display-percentage)
-    delta="$3"
-    current=$(ddcutil --display "$2" getvcp 10 | grep -oP 'current value =\s*\K\d+')
-    new=$((current + delta))
+    if [ "$MODE" = "backlight" ]; then
+        brightnessctl set "$3%"
+    else
+        delta="$3"
+        current=$(ddcutil --display "$2" getvcp 10 | grep -oP 'current value =\s*\K\d+')
+        new=$((current + delta))
 
-    [ "$new" -gt 100 ] && new=100
-    [ "$new" -lt 0 ] && new=0
+        [ "$new" -gt 100 ] && new=100
+        [ "$new" -lt 0 ] && new=0
 
-    ddcutil --display "$2" setvcp 10 "$new"
+        ddcutil --display "$2" setvcp 10 "$new"
+    fi
 
 esac
