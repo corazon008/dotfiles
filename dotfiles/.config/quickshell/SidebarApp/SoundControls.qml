@@ -13,6 +13,18 @@ ColumnLayout {
     property bool isOpen: false
     property int soundCount: 1
 
+    Process {
+        id: soundOutputs
+        command: ["bash", "-c", "pactl list sinks short | wc -l"]
+        running: root.isOpen
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.soundCount = parseInt(this.text.trim());
+            }
+        }
+    }
+
     // LOUDNESS SLIDER
     RowLayout {
         Layout.fillWidth: true

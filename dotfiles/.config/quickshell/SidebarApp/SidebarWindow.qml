@@ -221,38 +221,6 @@ PanelWindow {
         }
     }
 
-    property int soundCount: 1
-
-    Process {
-        id: soundOutputs
-
-        command: ["bash", "-c", "pactl list sinks short | wc -l"]
-
-        running: root.isOpen
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.soundCount = parseInt(this.text.trim());
-            }
-        }
-    }
-
-    property int screenCount: 1
-
-    Process {
-        id: brightnessDisplays
-
-        command: ["bash", "-c", "~/.config/hypr/scripts/brightness.sh displays"]
-
-        running: root.isOpen
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.screenCount = parseInt(this.text.trim());
-            }
-        }
-    }
-
     // ==========================================
     // MAIN PANEL BACKGROUND
     // ==========================================
@@ -392,13 +360,11 @@ PanelWindow {
                         SoundControls {
                             id: soundControls
                             isOpen: root.isOpen
-                            soundCount: root.soundCount
                         }
 
                         BrightnessControls {
                             id: brightnessControls
                             isOpen: root.isOpen
-                            screenCount: root.screenCount
                         }
                     }
 

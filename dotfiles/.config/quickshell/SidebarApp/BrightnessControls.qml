@@ -13,6 +13,18 @@ ColumnLayout {
     property bool isOpen: false
     property int screenCount: 1
 
+    Process {
+        id: brightnessDisplays
+        command: ["bash", "-c", "~/.config/hypr/scripts/brightness.sh displays"]
+        running: root.isOpen
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.screenCount = parseInt(this.text.trim());
+            }
+        }
+    }
+
     Text {
         text: "Brightness" // Sun/Brightness icon
         color: Theme.primary
