@@ -11,90 +11,21 @@ ColumnLayout {
     spacing: 20
 
     property bool isOpen: false
-    property int soundCount: 1
+    property var soundIds: []
 
     Process {
         id: soundOutputs
-        command: ["bash", "-c", "pactl list sinks short | wc -l"]
+        command: ["bash", "-c", "pactl list sinks short | awk '{print $1}'"]
         running: root.isOpen
 
         stdout: StdioCollector {
             onStreamFinished: {
-                root.soundCount = parseInt(this.text.trim());
+                root.soundIds = this.text.trim().split("\n").map(id => parseInt(id)).filter(id => !isNaN(id));
+                console.log("Sinks:", root.soundIds);
             }
         }
     }
 
-    // LOUDNESS SLIDER
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 15
-
-        Text {
-            text: "" // Speaker icon
-            color: Theme.primary
-            font.family: "monospace"
-            font.pixelSize: 18
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        Slider {
-            id: volumeSlider
-            Layout.fillWidth: true
-            from: 0
-            to: 100
-            value: 50 // Default
-
-            Process {
-                command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}'"]
-                running: root.isOpen
-                stdout: StdioCollector {
-                    onStreamFinished: {
-                        let val = parseInt(this.text.trim());
-                        if (!isNaN(val))
-                            volumeSlider.value = val;
-                    }
-                }
-            }
-
-            onMoved: {
-                Quickshell.execDetached(["bash", "-c", "wpctl set-volume @DEFAULT_AUDIO_SINK@ " + Math.round(value) + "%"]);
-            }
-
-            background: Rectangle {
-                x: volumeSlider.leftPadding
-                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
-                implicitWidth: 200
-                implicitHeight: 6
-                width: volumeSlider.availableWidth
-                height: implicitHeight
-                radius: 3
-                color: Theme.background
-                border.color: Theme.primary
-                border.width: 1
-
-                Rectangle {
-                    width: volumeSlider.visualPosition * parent.width
-                    height: parent.height
-                    color: Theme.primary
-                    radius: 3
-                }
-            }
-
-            handle: Rectangle {
-                x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
-                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
-                implicitWidth: 16
-                implicitHeight: 16
-                radius: 8
-                color: volumeSlider.pressed ? Theme.background : Theme.primary
-                border.color: Theme.primary
-                border.width: 1
-            }
-        }
-    }
-
-    // SOUND SLIDERS (one per sink)
     ColumnLayout {
         Layout.fillWidth: true
         spacing: 20
@@ -104,22 +35,22 @@ ColumnLayout {
             color: Theme.primary
             font.family: "monospace"
             font.pixelSize: 18
-            Layout.alignment: Qt.AlignVCenter
         }
 
         Repeater {
-            model: root.soundCount
+            model: root.soundIds
 
             delegate: RowLayout {
                 Layout.fillWidth: true
                 spacing: 15
 
+                property int sinkId: modelData
+
                 Text {
-                    text: " " + (index + 1)
+                    text: " " //+ sinkId
                     color: Theme.primary
                     font.family: "monospace"
                     font.pixelSize: 18
-                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 Slider {
@@ -127,10 +58,10 @@ ColumnLayout {
                     Layout.fillWidth: true
                     from: 0
                     to: 100
-                    value: 50 // Default
+                    value: 50
 
                     Process {
-                        command: ["bash", "-c", "pactl get-sink-volume " + (index) + " | grep -o '[0-9]*%' | head -1 | sed 's/%//'" ]
+                        command: ["bash", "-c", "pactl get-sink-volume " + sinkId + " | grep -o '[0-9]*%' | head -1 | sed 's/%//'"]
                         running: root.isOpen
                         stdout: StdioCollector {
                             onStreamFinished: {
@@ -142,7 +73,7 @@ ColumnLayout {
                     }
 
                     onMoved: {
-                        Quickshell.execDetached(["bash", "-c", "pactl set-sink-volume " + (index) + " " + Math.round(value) + "%"]);
+                        Quickshell.execDetached(["bash", "-c", "pactl set-sink-volume " + sinkId + " " + Math.round(value) + "%"]);
                     }
 
                     background: Rectangle {
@@ -180,4 +111,3 @@ ColumnLayout {
         }
     }
 }
-
