@@ -221,6 +221,22 @@ PanelWindow {
         }
     }
 
+    property int soundCount: 1
+
+    Process {
+        id: soundOutputs
+
+        command: ["bash", "-c", "pactl list sinks short | wc -l"]
+
+        running: root.isOpen
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.soundCount = parseInt(this.text.trim());
+            }
+        }
+    }
+
     property int screenCount: 1
 
     Process {
@@ -379,7 +395,7 @@ PanelWindow {
                             spacing: 15
 
                             Text {
-                                text: "" // Speaker icon
+                                text: "" // Speaker icon
                                 color: Theme.primary
                                 font.family: "monospace"
                                 font.pixelSize: 18
@@ -438,6 +454,92 @@ PanelWindow {
                                     color: volumeSlider.pressed ? Theme.background : Theme.primary
                                     border.color: Theme.primary
                                     border.width: 1
+                                }
+                            }
+                        }
+
+                        // SOUND SLIDER
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 20
+
+                            Text {
+                                text: "Sound"
+                                color: Theme.primary
+                                font.family: "monospace"
+                                font.pixelSize: 18
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Repeater {
+                                model: root.soundCount
+
+                                delegate: RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 15
+
+                                    Text {
+                                        text: " " + (index + 1)
+                                        color: Theme.primary
+                                        font.family: "monospace"
+                                        font.pixelSize: 18
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Slider {
+                                        id: soundSlider
+                                        Layout.fillWidth: true
+                                        from: 0
+                                        to: 100
+                                        value: 50 // Default
+
+                                        Process {
+                                            command: ["bash", "-c", "pactl get-sink-volume " + (index) + " | grep -o '[0-9]*%' | head -1 | sed 's/%//'"]
+                                            running: root.isOpen
+                                            stdout: StdioCollector {
+                                                onStreamFinished: {
+                                                    let v = parseInt(this.text.trim());
+                                                    if (!isNaN(v))
+                                                        soundSlider.value = v;
+                                                }
+                                            }
+                                        }
+
+                                        onMoved: {
+                                            Quickshell.execDetached(["bash", "-c", "pactl set-sink-volume " + (index) + " " + Math.round(value) + "%"]);
+                                        }
+
+                                        background: Rectangle {
+                                            x: soundSlider.leftPadding
+                                            y: soundSlider.topPadding + soundSlider.availableHeight / 2 - height / 2
+                                            implicitWidth: 200
+                                            implicitHeight: 6
+                                            width: soundSlider.availableWidth
+                                            height: implicitHeight
+                                            radius: 3
+                                            color: Theme.background
+                                            border.color: Theme.primary
+                                            border.width: 1
+
+                                            Rectangle {
+                                                width: soundSlider.visualPosition * parent.width
+                                                height: parent.height
+                                                color: Theme.primary
+                                                radius: 3
+                                            }
+                                        }
+
+                                        handle: Rectangle {
+                                            x: soundSlider.leftPadding + soundSlider.visualPosition * (soundSlider.availableWidth - width)
+                                            y: soundSlider.topPadding + soundSlider.availableHeight / 2 - height / 2
+                                            implicitWidth: 16
+                                            implicitHeight: 16
+                                            radius: 8
+                                            color: soundSlider.pressed ? Theme.background : Theme.primary
+                                            border.color: Theme.primary
+                                            border.width: 1
+                                        }
+                                    }
                                 }
                             }
                         }
