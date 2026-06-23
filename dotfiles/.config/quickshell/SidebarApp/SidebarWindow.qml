@@ -503,9 +503,10 @@ PanelWindow {
                                             radius: 3
                                             color: Theme.background
                                             border.color: Theme.primary
+                                            border.width: 1
 
                                             Rectangle {
-                                                width: brightnessSlider.parent.visualPosition * parent.width
+                                                width: brightnessSlider.visualPosition * parent.width
                                                 height: parent.height
                                                 color: Theme.primary
                                                 radius: 3
