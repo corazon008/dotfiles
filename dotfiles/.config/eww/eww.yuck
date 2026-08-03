@@ -1,0 +1,46 @@
+(defpoll tasks :interval "60s"
+  "cat ~/.cache/eww_tasks.json")
+
+
+(defwidget todo_widget []
+  (box
+    :class "todo"
+    :orientation "vertical"
+
+    (label
+      :class "title"
+      :text "󰄬 Tasks")
+
+    (for task in tasks
+      (box
+        :class "task"
+        :orientation "horizontal"
+        :halign "fill"
+        :space-evenly false
+
+        (label
+          :halign "start"
+          :text {task.done ? "✓ " : "○ "})
+
+        (label
+          :halign "start"
+          :text {task.title})
+      )
+    )
+  )
+)
+
+(defwindow todo
+        :monitor 0
+        :geometry ( geometry :x "20px"
+                             :y "40px"
+                             :width "420px"
+                             :height "500px"
+                             :anchor "top left")
+        :stacking "bg"
+        :focusable false
+        :wm-ignore false
+
+    (todo_widget)
+
+)

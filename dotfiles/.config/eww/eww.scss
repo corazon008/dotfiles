@@ -1,0 +1,29 @@
+.todo {
+    background: rgba(70, 70, 70, 0.5);
+
+    border-radius: 18px;
+
+    padding: 20px;
+
+    color: white;
+
+    font-family: "JetBrainsMono Nerd Font";
+}
+
+.title {
+    font-size: 24px;
+
+    font-weight: bold;
+
+    margin-bottom: 15px;
+}
+
+.task {
+    padding: 8px;
+
+    border-radius: 10px;
+}
+
+.task:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
