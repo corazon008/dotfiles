@@ -44,7 +44,7 @@
         :focusable false
         :wm-ignore false
 
-    (todo_widget :tasks tasks_cours )
+    (todo_widget :tasks tasks_todos )
 )
 
 (defwindow todo-cours
