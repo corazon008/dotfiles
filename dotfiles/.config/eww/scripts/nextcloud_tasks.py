@@ -46,8 +46,8 @@ calendars = principal.calendars()
 
 tasks = []
 
-print(f"Found {len(calendars)} calendars")
-print(f"Calendars: {[calendar.get_display_name() for calendar in calendars]}")
+#print(f"Found {len(calendars)} calendars")
+#print(f"Calendars: {[calendar.get_display_name() for calendar in calendars]}")
 
 # ----------------------------
 # Récupération des tâches
