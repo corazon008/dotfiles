@@ -13,6 +13,26 @@ curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/.local/bin
 bash <(curl -s https://raw.githubusercontent.com/mylinuxforwork/ml4w-dotfiles-settings/main/setup.sh)
 
 # --------------------------------------------------------------
+# Quickshell Overview
+# --------------------------------------------------------------
+
+bash <(curl -s https://raw.githubusercontent.com/mylinuxforwork/ml4w-quickshell-overview/main/install.sh)
+
+# --------------------------------------------------------------
+# Pipx
+# --------------------------------------------------------------
+
+echo ":: Installing packages with pipx"
+pipx install pywalfox
+pywalfox-install
+
+# --------------------------------------------------------------
+# Grimblast
+# --------------------------------------------------------------
+
+pacman -Qi grimblast-git &>/dev/null || source $repo_path/setup/clean-install-grimblast.sh
+
+# --------------------------------------------------------------
 # Cursors
 # --------------------------------------------------------------
 

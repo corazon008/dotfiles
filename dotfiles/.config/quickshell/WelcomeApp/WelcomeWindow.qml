@@ -16,6 +16,31 @@ FloatingWindow {
     // --- Guard property for the flatpak app ---
     property bool isHyprlandSettingsInstalled: false
 
+    // --- Version read from the shipped version.json ---
+    property string version: ""
+
+    FileView {
+        id: versionFile
+        path: Quickshell.env("HOME") + "/.config/ml4w/version.json"
+        blockLoading: true
+        printErrors: false
+        onLoaded: {
+            try {
+                root.version = JSON.parse(this.text()).Version || ""
+            } catch (e) {
+                root.version = ""
+            }
+        }
+        onLoadFailed: root.version = ""
+    }
+
+    // Re-read version.json every time the window is shown, so an update that
+    // happened while the window was hidden is picked up.
+    onVisibleChanged: {
+        if (root.visible)
+            versionFile.reload()
+    }
+
     IpcHandler {
         target: "welcome"
         function toggle(): void {
@@ -333,7 +358,8 @@ FloatingWindow {
 
                     Text {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "Version 2.15"
+                        text: "Version " + root.version
+                        visible: root.version !== ""
                         font.family: Theme.fontFamily
                         font.pixelSize: 16
                         color: Theme.on_background
@@ -426,25 +452,69 @@ FloatingWindow {
                         }
                     }
 
-                    Button {
+                    RowLayout {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: 15
-                        text: "All keybindings"
+                        spacing: 8
 
-                        onClicked: {
-                            Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/hypr/scripts/keybindings.sh"])
+                        Button {
+                            text: "Input"
+
+                            onClicked: {
+                                Quickshell.execDetached(["gnome-text-editor", Quickshell.env("HOME") + "/.config/hypr/input.lua"])
+                            }
+
+                            background: Rectangle {
+                                color: "transparent"
+                                border.color: Theme.primary
+                                radius: 10
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                font.family: Theme.fontFamily
+                                color: Theme.primary
+                                padding: 8
+                            }
                         }
 
-                        background: Rectangle {
-                            color: "transparent"
-                            border.color: Theme.primary
-                            radius: 10
+                        Button {
+                            text: "Monitors"
+
+                            onClicked: {
+                                Quickshell.execDetached(["nwg-displays"])
+                            }
+
+                            background: Rectangle {
+                                color: "transparent"
+                                border.color: Theme.primary
+                                radius: 10
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                font.family: Theme.fontFamily
+                                color: Theme.primary
+                                padding: 8
+                            }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            font.family: Theme.fontFamily
-                            color: Theme.primary
-                            padding: 8
+
+                        Button {
+                            text: "All keybindings"
+
+                            onClicked: {
+                                Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/hypr/scripts/keybindings.sh"])
+                            }
+
+                            background: Rectangle {
+                                color: "transparent"
+                                border.color: Theme.primary
+                                radius: 10
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                font.family: Theme.fontFamily
+                                color: Theme.primary
+                                padding: 8
+                            }
                         }
                     }
                 }

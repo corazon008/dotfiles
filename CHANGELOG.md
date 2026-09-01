@@ -1,9 +1,26 @@
+Version 2.16
+--------------------------------------------------------
+- Add Blue Light Filter toggle switch to sidebar in addition to SUPER + SHIFT + H
+- New quickshell windows installation script added. Using the latest version from GitHub
+- Welcome app is now using the version information from ~/.config/ml4w/version.json
+
+Version 2.15.1
+--------------------------------------------------------
+- Add statusbar autohide switch to Sidebar. Can also be toggled with keybinding SUPER + ALT + B
+- Add dock autohide switch to Sidebar. Can also be toggled with keybinding SUPER + ALT + D. Reload Dock moved to SUPER + SHIFT + D
+- Add toggle switch to sidebar to temporarly disable hypridle (disable auto-lock)
+- Add new workspace-split monitor variation to split workspaces between multiple monitors. Can be selected in the Settings App/System Settings. Copy the file for individual setups
+- Removed all AUR packages from dependencies. AUR Helper must be installed separately if needed.
+
 Version 2.15
 --------------------------------------------------------
+- nwg-dock-hyprland replaced with Quickshell based dock (nwg-dock-hyprland not supported on Fedora 44)
 - Scratchpad feature updated: SUPER + SHIFT + S to move the current window into the scratchpad workspace.
   SUPER + S to toggle the scatchpad workspace.
 - Fedora Copr updates
 - Using Quickshell Status Bar as default (due to existing mouse click issue on Waybar stable). Waybar can be selected from the sidebar.
+- Global ML4W Themes have been temporarily removed. They will be back soon.
+- walker and nwg-dock-hyprland configs removed
 
 Version 2.14.1
 --------------------------------------------------------
