@@ -5,14 +5,14 @@
   "cat ~/.cache/eww_tasks_cours.json")
 
 
-(defwidget todo_widget [tasks]
+(defwidget todo_widget [tasks title]
   (box
     :class "todo"
     :orientation "vertical"
 
     (label
       :class "title"
-      :text "󰄬 Tasks")
+      :text title)
 
     (for task in tasks
       (box
@@ -44,7 +44,7 @@
         :focusable false
         :wm-ignore false
 
-    (todo_widget :tasks tasks_todos )
+    (todo_widget :tasks tasks_todos :title "Tâches")
 )
 
 (defwindow todo-cours
@@ -58,5 +58,5 @@
         :focusable false
         :wm-ignore false
 
-    (todo_widget :tasks tasks_cours)
+    (todo_widget :tasks tasks_cours :title "Cours")
 )
