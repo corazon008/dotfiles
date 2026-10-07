@@ -52,6 +52,7 @@
             :orientation "horizontal"
             :halign "fill"
             :space-evenly false
+            :spacing 8
 
             (label
               :class "task-mark"
@@ -62,7 +63,12 @@
               :class "task-title"
               :halign "start"
               :hexpand true
-              :text {task.title})))))
+              :text {task.title})
+
+            (label
+              :class "task-due"
+              :halign "end"
+              :text {task.due ?: ""})))))
   )
 )
 
