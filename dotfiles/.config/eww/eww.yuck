@@ -5,31 +5,60 @@
   "cat ~/.cache/eww_tasks_cours.json")
 
 
-(defwidget todo_widget [tasks title]
+(defwidget todo_widget [tasks title accent]
   (box
-    :class "todo"
+    :class "todo ${accent}"
     :orientation "vertical"
 
-    (label
-      :class "title"
-      :text title)
+    (box
+      :class "header"
+      :orientation "horizontal"
+      :space-evenly false
 
-    (for task in tasks
+      (label
+        :class "title"
+        :halign "start"
+        :hexpand true
+        :text title)
+
+      (label
+        :class "count"
+        :halign "end"
+        :text {arraylength(tasks)}))
+
+    (box
+      :class "empty"
+      :visible {arraylength(tasks) == 0}
+      (label
+        :halign "start"
+        :text "Aucune tâche"))
+
+    (scroll
+      :vscroll true
+      :hscroll false
+      :visible {arraylength(tasks) > 0}
+
       (box
-        :class "task"
-        :orientation "horizontal"
-        :halign "fill"
+        :orientation "vertical"
         :space-evenly false
 
-        (label
-          :halign "start"
-          :text {task.done ? "✓ " : "○ "})
+        (for task in tasks
+          (box
+            :class "task p-${task.priority ?: 'none'} ${task.done ? 'done' : ''}"
+            :orientation "horizontal"
+            :halign "fill"
+            :space-evenly false
 
-        (label
-          :halign "start"
-          :text {task.title})
-      )
-    )
+            (label
+              :class "task-mark"
+              :halign "start"
+              :text {task.done ? "✓ " : "○ "})
+
+            (label
+              :class "task-title"
+              :halign "start"
+              :hexpand true
+              :text {task.title})))))
   )
 )
 
@@ -44,7 +73,7 @@
         :focusable false
         :wm-ignore false
 
-    (todo_widget :tasks tasks_todos :title "Tâches")
+    (todo_widget :tasks tasks_todos :title "Tâches" :accent "todos")
 )
 
 (defwindow todo-cours
@@ -58,5 +87,5 @@
         :focusable false
         :wm-ignore false
 
-    (todo_widget :tasks tasks_cours :title "Cours")
+    (todo_widget :tasks tasks_cours :title "Cours" :accent "cours")
 )

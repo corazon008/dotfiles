@@ -1,0 +1,15 @@
+// Eww colors
+// Generated with Matugen
+//
+// Fallback palette so eww can load before the first `matugen` run.
+// Matugen overwrites this file via the `[templates.eww]` entry in config.toml.
+$surface: #111318;
+$surface_container: #1d2024;
+$surface_alpha: rgba(17, 19, 24, 0.55);
+$on_surface: #e1e2e9;
+$on_surface_variant: #c4c6cf;
+$outline_variant: #43474e;
+$primary: #a8c8ff;
+$secondary: #bdc7dc;
+$tertiary: #dbbce1;
+$error: #ffb4ab;
