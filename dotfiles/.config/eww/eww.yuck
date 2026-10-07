@@ -9,6 +9,9 @@
   (box
     :class "todo ${accent}"
     :orientation "vertical"
+    :space-evenly false
+    :vexpand true
+    :hexpand true
 
     (box
       :class "header"
@@ -36,6 +39,7 @@
     (scroll
       :vscroll true
       :hscroll false
+      :vexpand true
       :visible {arraylength(tasks) > 0}
 
       (box
