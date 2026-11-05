@@ -1,3 +1,25 @@
+Version 2.17
+--------------------------------------------------------
+- Add wallpaper carousel as a modern alternative to the wallpaper selector. Open it with SUPER + W or with the new button to the left of the search field in the wallpaper selector. Move through the wallpapers with the left and right arrow keys or the mouse wheel, and select one with Return or a click. The wallpaper is set without transition and the carousel closes after one second. Can also be opened with "qs ipc call wallpaper-carousel toggle"
+- Toggle floating for all windows of the workspace (SUPER + SHIFT + T) now arranges the floating windows in a grid with a 16px gap inside the free area of the monitor (respecting status bar and dock) instead of keeping their tiled or full screen size. A workspace with mixed tiled and floating windows is now switched completely to floating
+- Add "Window Mode" switch to the sidebar to select the window mode: off uses Tiling (default), on uses Floating. In floating mode every new window opens floating, and switching the mode converts the open windows on all workspaces (floating windows are arranged in a grid). The selection is saved to ~/.config/ml4w/settings/window-mode and can also be changed with ~/.config/ml4w/scripts/ml4w-window-mode (floating, tiling, toggle, get)
+- The packages listed in setup/packages/packages (default apps: kitty, neovim, nautilus, gnome-text-editor, firefox) are installed with the initial installation only and not with updates. This enables a safe replacement of selected default apps, e.g. after uninstalling Firefox and switching to another browser, an update will not install it again
+- Add mute toggle to the volume icon of the sidebar. A click mutes the audio output, a second click unmutes it and restores the previous volume. The icon shows the current mute status, also when muted from somewhere else (e.g. status bar, keyboard or pavucontrol)
+- Add audio output menu to the volume module of the status bar. A left click opens a list of the available output devices to switch the default output; currently playing audio moves to the selected device. The "More Settings" entry opens the audio control app set with "settingsCommand" in the "volume" section of ~/.config/ml4w-statusbar/config.json (default: pavucontrol). Leave it empty to hide the entry
+- Add microphone slider below the loudness slider of the sidebar to set the volume of the default audio input. A click on the microphone icon mutes or unmutes the microphone, and the icon shows the current mute status
+- Screenshot menu updated: the type of screenshot (Capture Everything, Capture Active Display, Capture Selection) is now selected first, followed by Immediate or Delayed. Three new options at the top take the screenshot immediately, copy it to the clipboard and save it without further steps.
+- Add --transition option to ~/.config/ml4w/scripts/ml4w-wallpaper to override the transition effect setting for a single call (e.g. --transition none)
+- Add Hypr App Switcher (https://github.com/anshifmonz/hypr-app-switcher) to switch between the applications on the active workspace. Open it with ALT + Tab (ALT + SHIFT + Tab to switch backwards). It is installed into ~/.local/share/hypr-app-switcher and started from ml4w-autostart
+
+Version 2.16.1
+--------------------------------------------------------
+- The power menu has moved into its own repository: https://github.com/mylinuxforwork/ml4w-powermenu. It is installed into ~/.local/share/ml4w-powermenu and started from ml4w-autostart. Its installer adds the ml4w-powermenu command (~/.local/bin/ml4w-powermenu) to start, stop and control the power menu (toggle, open, close, reload, edit). Custom scripts or keybindings using "qs ipc call power toggle" must be changed to "ml4w-powermenu toggle"
+- Add key board control for the power menu. Select the module with up and down arrow keys and confirm with Return.
+- Add ~/.config/ml4w-powermenu/config.json to configure the power menu: the order of the buttons (buttons can also be hidden), the command of each button, and the size, spacing, shape, animation and colors of the menu
+- The ML4W OS autostart log has moved from ~/.mydotfiles/ml4w-autostart.log to ~/.local/state/ml4w-os-hyprland. Each start writes a new log file named with the date and time (e.g. ml4w-autostart-2026-10-02_08-32-45.log), and only the last 10 logs are kept
+- Add "Keybinds" button to the upper right of the sidebar to show all keybindings. The "All keybindings" button in the Welcome app has been renamed to "All Keybinds"
+- Add "Launcher" switch to the sidebar to select the application launcher: on uses Walker, off uses Rofi. The selection is saved to ~/.config/ml4w/settings/launcher
+
 Version 2.16
 --------------------------------------------------------
 - Add Blue Light Filter toggle switch to sidebar in addition to SUPER + SHIFT + H
@@ -7,6 +29,10 @@ Version 2.16
 - The dock is now configured in one place only: ~/.config/ml4w-dock/config.json. The file is created on first start (migrated from the former ~/.config/ml4w-dock/dock.json or ~/.config/ml4w/settings/dock.json, which has been removed) and can be edited directly
 - Add new configuration for the status bar to define an alternative calendar app that can be launched with a right click on the clock module.
 - Add new menu items "Open .mydotfiles Folder" and "Open Backup Folder" to the System menu of the Welcome app. Both open in your configured filemanager.
+- Add launcher button to the left side of the dock. Left click opens the application launcher, right click opens the dock menu with Reload Dock, Settings and Edit configuration. The button can be hidden with the Launcher Icon switch in the dock settings or "launcherButton": false in ~/.config/ml4w-dock/config.json
+- Add settings dialog to the dock. Open it from the dock menu, from Settings in the Dock menu of the sidebar or with ml4w-dock settings. The Dock Autohide switch has moved from the sidebar into the new dialog
+- The dock has moved into its own repository: https://github.com/mylinuxforwork/ml4w-dock. It is installed into ~/.local/share/ml4w-dock and started from ml4w-autostart. Its installer adds the ml4w-dock command (~/.local/bin/ml4w-dock) to start, stop and control the dock (toggle, enable, disable, autohideToggle, reload, settings, edit)
+- Add "editorCommand" to ~/.config/ml4w-dock/config.json to set the editor that opens the dock configuration. Falls back to xdg-open when it is empty or not found
 
 Version 2.15.1
 --------------------------------------------------------

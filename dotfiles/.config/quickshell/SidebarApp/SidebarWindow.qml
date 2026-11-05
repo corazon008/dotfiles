@@ -29,7 +29,7 @@ PanelWindow {
     }
 
     margins {
-        top: 52
+        top: 0
         bottom: 0
     }
 
@@ -260,7 +260,7 @@ PanelWindow {
             anchors.margins: 20
             spacing: 20
 
-            // --- TOP BAR (Light/Dark, Screenshot & Color Picker) ---
+            // --- TOP BAR (Light/Dark, Screenshot, Color Picker & Keybinds) ---
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
@@ -289,6 +289,15 @@ PanelWindow {
                 }
 
                 Item { Layout.fillWidth: true }
+
+                ML4WButton {
+                    text: "Keybinds"
+                    Layout.fillWidth: false
+                    onClicked: {
+                        root.isOpen = false
+                        Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/hypr/scripts/keybindings.sh"])
+                    }
+                }
             }
 
             Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.primary; opacity: 0.3 }
@@ -362,6 +371,58 @@ PanelWindow {
                         BrightnessControls {
                             id: brightnessControls
                             isOpen: root.isOpen
+                        }
+
+                        // BLUE LIGHT FILTER (HYPRSUNSET) TOGGLE
+                        // Temporary status switch mirroring the SUPER+SHIFT+H
+                        // keybinding: it just starts/kills hyprsunset, nothing
+                        // is persisted, so the state is gone after a restart.
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: root.isHyprsunsetInstalled
+
+                            Text {
+                                text: "Blue Light Filter"
+                                color: Theme.primary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 16
+                            }
+                            Item { Layout.fillWidth: true }
+                            ML4WSwitch {
+                                id: hyprsunsetSwitch
+                                property bool ready: false
+                                // The running process is the only state there is.
+                                Process {
+                                    id: hyprsunsetStateProc
+                                    command: ["bash", "-c", "pgrep -x hyprsunset > /dev/null && echo 1 || echo 0"]
+                                    stdout: StdioCollector {
+                                        onStreamFinished: {
+                                            hyprsunsetSwitch.checked = (this.text.trim() === "1")
+                                            hyprsunsetSwitch.ready = true
+                                        }
+                                    }
+                                }
+                                // Re-read while the sidebar is open so the switch
+                                // tracks external toggles (the keybinding) live.
+                                Timer {
+                                    interval: 1000
+                                    repeat: true
+                                    running: root.isOpen
+                                    triggeredOnStart: true
+                                    onTriggered: hyprsunsetStateProc.running = true
+                                }
+                                onClicked: {
+                                    if (!ready) return;
+                                    // Absolute command matching the switch's
+                                    // post-click position instead of a blind
+                                    // toggle, so it can't get out of sync.
+                                    let cmd = checked
+                                        ? "pgrep -x hyprsunset > /dev/null || setsid -f hyprsunset > /dev/null 2>&1"
+                                        : "pkill -x hyprsunset"
+                                    Quickshell.execDetached(["bash", "-c", cmd])
+                                }
+                            }
+                            Item { implicitWidth: 28 }
                         }
                     }
 
@@ -576,11 +637,11 @@ PanelWindow {
                             property string activeBar: "waybar"
                             // Read the active bar and its current on/off state in
                             // one shot ("<bar> <0|1>"): for quickshell the
-                            // "enabled" flag in the master statusbar.json, for
+                            // "enabled" flag in its config.json, for
                             // waybar the presence of the waybar-disabled marker.
                             Process {
                                 id: statusbarStateProc
-                                command: ["bash", "-c", "sb=$(tr -d '[:space:]' < ~/.config/ml4w/settings/statusbar 2>/dev/null); [ -n \"$sb\" ] || sb=waybar; if [ \"$sb\" = quickshell ]; then f=~/.config/ml4w-statusbar/statusbar.json; [ -f \"$f\" ] || f=~/.config/ml4w/settings/statusbar.json; grep -q '\"enabled\"[[:space:]]*:[[:space:]]*false' \"$f\" && s=0 || s=1; else test -f ~/.config/ml4w/settings/waybar-disabled && s=0 || s=1; fi; echo \"$sb $s\""]
+                                command: ["bash", "-c", "sb=$(tr -d '[:space:]' < ~/.config/ml4w/settings/statusbar 2>/dev/null); [ -n \"$sb\" ] || sb=waybar; if [ \"$sb\" = quickshell ]; then grep -q '\"enabled\"[[:space:]]*:[[:space:]]*false' ~/.config/ml4w-statusbar/config.json 2>/dev/null && s=0 || s=1; else test -f ~/.config/ml4w/settings/waybar-disabled && s=0 || s=1; fi; echo \"$sb $s\""]
                                 stdout: StdioCollector {
                                     onStreamFinished: {
                                         let parts = this.text.trim().split(" ")
@@ -625,20 +686,6 @@ PanelWindow {
                                 implicitWidth: 220
                                 padding: 8
 
-                                // Only offer "Edit Settings" once the user has an
-                                // ml4w-statusbar override file to edit; the shipped
-                                // statusbar.json is not meant to be edited directly.
-                                property bool overrideExists: false
-                                Process {
-                                    command: ["bash", "-c", "[ -f ~/.config/ml4w-statusbar/statusbar.json ] && echo 1 || echo 0"]
-                                    running: root.isOpen
-                                    stdout: StdioCollector {
-                                        onStreamFinished: {
-                                            statusbarMenu.overrideExists = (this.text.trim() === "1")
-                                        }
-                                    }
-                                }
-
                                 background: Rectangle { color: Theme.background; border.color: Theme.primary; border.width: 1; radius: 8 }
                                 ML4WMenuItem { text: "Reload Status Bar"; onClicked: {
                                         // Reads the settings file and reloads the
@@ -660,18 +707,19 @@ PanelWindow {
                                     height: visible ? implicitHeight : 0
                                     onClicked: {
                                         root.isOpen = false
-                                        Quickshell.execDetached(["gnome-text-editor", Quickshell.env("HOME") + "/.config/ml4w/settings/waybar-quicklinks.json"])
+                                        Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/ml4w/settings/editor.sh " + Quickshell.env("HOME") + "/.config/ml4w/settings/waybar-quicklinks.json"])
                                     }
                                 }
                                 ML4WMenuItem {
-                                    text: "Edit Settings"
-                                    visible: statusbarMenu.overrideExists
+                                    text: "Edit configuration"
+                                    // The statusbar's own settings file, created
+                                    // on its first start, is meant to be edited
+                                    // directly.
+                                    visible: statusbarSwitch.activeBar === "quickshell"
                                     height: visible ? implicitHeight : 0
                                     onClicked: {
                                         root.isOpen = false
-                                        // Edit the master file: the ml4w-statusbar override when it
-                                        // exists, otherwise the shipped statusbar.json.
-                                        Quickshell.execDetached(["bash", "-c", "f=~/.config/ml4w-statusbar/statusbar.json; [ -f \"$f\" ] || f=~/.config/ml4w/settings/statusbar.json; ~/.config/ml4w/settings/editor.sh \"$f\""])
+                                        Quickshell.execDetached(["bash", "-c", "~/.config/ml4w/settings/editor.sh ~/.config/ml4w-statusbar/config.json"])
                                     }
                                 }
                             }
@@ -687,11 +735,12 @@ PanelWindow {
                             id: statusbarExpandedSwitch
                             property bool ready: false
                             // Read the current state from the "alwaysExpanded" flag
-                            // in the master file: the ml4w-statusbar override when it
-                            // exists, otherwise the shipped statusbar.json. A missing
-                            // file or flag counts as off.
+                            // in the statusbar's settings file. The test is for the
+                            // flag being *false* so a missing file or flag counts as
+                            // on, matching the statusbar's own default — the file
+                            // starts out empty and only carries what was changed.
                             Process {
-                                command: ["bash", "-c", "f=~/.config/ml4w-statusbar/statusbar.json; [ -f \"$f\" ] || f=~/.config/ml4w/settings/statusbar.json; grep -q '\"alwaysExpanded\"[[:space:]]*:[[:space:]]*true' \"$f\" && echo 1 || echo 0"]
+                                command: ["bash", "-c", "grep -q '\"alwaysExpanded\"[[:space:]]*:[[:space:]]*false' ~/.config/ml4w-statusbar/config.json 2>/dev/null && echo 0 || echo 1"]
                                 running: root.isOpen
                                 stdout: StdioCollector {
                                     onStreamFinished: {
@@ -725,13 +774,11 @@ PanelWindow {
                             id: statusbarAutohideSwitch
                             property bool ready: false
                             // Read the current state from the "autohide" flag in
-                            // the master file: the ml4w-statusbar override when it
-                            // exists, otherwise the shipped statusbar.json. A
-                            // missing file or flag counts as off, matching the
-                            // statusbar's own default.
+                            // the statusbar's settings file. A missing file or flag
+                            // counts as off, matching the statusbar's own default.
                             Process {
                                 id: statusbarAutohideProc
-                                command: ["bash", "-c", "f=~/.config/ml4w-statusbar/statusbar.json; [ -f \"$f\" ] || f=~/.config/ml4w/settings/statusbar.json; grep -q '\"autohide\"[[:space:]]*:[[:space:]]*true' \"$f\" && echo 1 || echo 0"]
+                                command: ["bash", "-c", "grep -q '\"autohide\"[[:space:]]*:[[:space:]]*true' ~/.config/ml4w-statusbar/config.json 2>/dev/null && echo 1 || echo 0"]
                                 stdout: StdioCollector {
                                     onStreamFinished: {
                                         console.log("Test for Statusbar Autohide: " + this.text.trim())
@@ -740,7 +787,7 @@ PanelWindow {
                                     }
                                 }
                             }
-                            // Polled like the Dock Autohide switch below, so the
+                            // Polled like the Dock switch below, so the
                             // state tracks changes made outside the sidebar (the
                             // SUPER + ALT + B keybinding).
                             Timer {
@@ -760,6 +807,48 @@ PanelWindow {
                                 : "qs ipc call statusbar autohideOff"
                                 console.log("Statusbar Autohide cmd: " + ipcCmd)
                                 Quickshell.execDetached(["bash", "-c", ipcCmd])
+                            }
+                        }
+                        Item { implicitWidth: 28 }
+                    }
+
+                    // --- LAUNCHER ---
+                    // Select which launcher ML4W OS uses. The choice is persisted
+                    // to ~/.config/ml4w/settings/launcher (read by ml4w-launcher).
+                    // On = Walker, Off = Rofi.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: "Launcher"; color: Theme.primary; font.family: Theme.fontFamily; font.pixelSize: 16 }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: launcherSwitch.checked ? "Walker" : "Rofi"
+                            color: Theme.primary
+                            opacity: 0.7
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 14
+                            Layout.rightMargin: 8
+                        }
+                        ML4WSwitch {
+                            id: launcherSwitch
+                            property bool ready: false
+                            // Read the configured launcher (defaults to rofi).
+                            Process {
+                                command: ["bash", "-c", "l=$(tr -d '[:space:]' < ~/.config/ml4w/settings/launcher 2>/dev/null); [ \"$l\" = walker ] && echo 1 || echo 0"]
+                                running: root.isOpen
+                                stdout: StdioCollector {
+                                    onStreamFinished: {
+                                        launcherSwitch.checked = (this.text.trim() === "1")
+                                        launcherSwitch.ready = true
+                                    }
+                                }
+                            }
+                            onClicked: {
+                                if (!ready) return;
+                                let cmd = checked
+                                    ? "echo walker > ~/.config/ml4w/settings/launcher"
+                                    : "echo rofi > ~/.config/ml4w/settings/launcher"
+                                console.log("Launcher cmd: " + cmd)
+                                Quickshell.execDetached(["bash", "-c", cmd])
                             }
                         }
                         Item { implicitWidth: 28 }
@@ -804,8 +893,8 @@ PanelWindow {
                                 // new state via IPC. `checked` already reflects
                                 // the post-click position.
                                 let ipcCmd = checked
-                                ? "qs ipc call dock enable"
-                                : "qs ipc call dock disable"
+                                ? "ml4w-dock enable"
+                                : "ml4w-dock disable"
                                 console.log("Dock cmd: " + ipcCmd)
                                 Quickshell.execDetached(["bash", "-c", ipcCmd])
                             }
@@ -826,51 +915,61 @@ PanelWindow {
                                         Quickshell.execDetached(["bash", "-c", "~/.config/ml4w/scripts/ml4w-reload-dock"])
                                     }
                                 }
+                                ML4WMenuItem {
+                                    text: "Settings"
+                                    // Opens the dock's own settings dialog
+                                    // (autohide lives there now).
+                                    onClicked: {
+                                        root.isOpen = false
+                                        Quickshell.execDetached(["bash", "-c", "ml4w-dock settings"])
+                                    }
+                                }
+                                ML4WMenuItem {
+                                    text: "Edit configuration"
+                                    // The dock opens its own settings file in
+                                    // dock.editorCommand (xdg-open without one),
+                                    // the same as its menu's entry.
+                                    onClicked: {
+                                        root.isOpen = false
+                                        Quickshell.execDetached(["bash", "-c", "ml4w-dock edit"])
+                                    }
+                                }
                             }
                         }
                     }
 
-                    // --- DOCK AUTOHIDE ---
+                    // --- WINDOW MODE ---
+                    // Global window mode, persisted to
+                    // ~/.config/ml4w/settings/window-mode by ml4w-window-mode
+                    // (missing = tiling). On = Floating, Off = Tiling.
                     RowLayout {
                         Layout.fillWidth: true
-                        Text { text: "Dock Autohide"; color: Theme.primary; font.family: Theme.fontFamily; font.pixelSize: 16 }
+                        Text { text: "Window Mode"; color: Theme.primary; font.family: Theme.fontFamily; font.pixelSize: 16 }
                         Item { Layout.fillWidth: true }
+                        Text {
+                            text: windowModeSwitch.checked ? "Floating" : "Tiling"
+                            color: Theme.primary
+                            opacity: 0.7
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 14
+                            Layout.rightMargin: 8
+                        }
                         ML4WSwitch {
-                            id: dockAutohideSwitch
+                            id: windowModeSwitch
                             property bool ready: false
-                            // Read the current state from the "autohide" flag in
-                            // the dock's settings file. A missing file or flag
-                            // counts as off, matching the dock's own default.
                             Process {
-                                id: dockAutohideProc
-                                command: ["bash", "-c", "grep -q '\"autohide\"[[:space:]]*:[[:space:]]*true' ~/.config/ml4w-dock/config.json 2>/dev/null && echo 1 || echo 0"]
+                                command: ["bash", "-c", "m=$(tr -d '[:space:]' < ~/.config/ml4w/settings/window-mode 2>/dev/null); [ \"$m\" = floating ] && echo 1 || echo 0"]
+                                running: root.isOpen
                                 stdout: StdioCollector {
                                     onStreamFinished: {
-                                        console.log("Test for Dock Autohide: " + this.text.trim())
-                                        dockAutohideSwitch.checked = (this.text.trim() === "1")
-                                        dockAutohideSwitch.ready = true
+                                        windowModeSwitch.checked = (this.text.trim() === "1")
+                                        windowModeSwitch.ready = true
                                     }
                                 }
                             }
-                            // Polled like the Dock switch above, so the state
-                            // tracks changes made outside the sidebar.
-                            Timer {
-                                interval: 1000
-                                repeat: true
-                                running: root.isOpen
-                                triggeredOnStart: true
-                                onTriggered: dockAutohideProc.running = true
-                            }
                             onClicked: {
                                 if (!ready) return;
-                                // The dock owns the file write; just tell it the
-                                // new state via IPC. `checked` already reflects
-                                // the post-click position.
-                                let ipcCmd = checked
-                                ? "qs ipc call dock autohideOn"
-                                : "qs ipc call dock autohideOff"
-                                console.log("Dock Autohide cmd: " + ipcCmd)
-                                Quickshell.execDetached(["bash", "-c", ipcCmd])
+                                Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/ml4w/scripts/ml4w-window-mode " + (checked ? "floating" : "tiling")])
                             }
                         }
                         Item { implicitWidth: 28 }
@@ -978,6 +1077,13 @@ PanelWindow {
                         Layout.fillWidth: true
                         Text { text: "Wallpaper"; color: Theme.primary; font.family: Theme.fontFamily; font.pixelSize: 16 }
                         Item { Layout.fillWidth: true }
+                        ActionIcon {
+                            iconSrc: "../shared/icons/carousel.svg"
+                            onClicked: {
+                                root.isOpen = false
+                                Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/ml4w/scripts/ml4w-wallpaper-app --carousel"])
+                            }
+                        }
                         ActionIcon {
                             iconSrc: "../shared/icons/wallpaper.svg"
                             onClicked: {
