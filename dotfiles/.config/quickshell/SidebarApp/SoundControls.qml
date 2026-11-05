@@ -3,6 +3,7 @@ import Quickshell.Io
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import QtQuick.Effects
 import qs.CustomTheme
 
 ColumnLayout {
@@ -17,6 +18,7 @@ ColumnLayout {
     // Kept as a parallel list for the volume-slider Repeater.
     property var soundIds: []
     property bool fetchTick: false
+    property bool micMuted: false
 
     // Re-list sinks and re-read the default output while the panel stays open
     // so the dropdown follows external switches (pavucontrol, wpctl, ...).
@@ -100,6 +102,29 @@ ColumnLayout {
                 root.syncOutput();
             }
         }
+    }
+
+    Process {
+        id: micStatusProc
+        command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | awk '{print int($2 * 100), ($3 == \"[MUTED]\" ? 1 : 0)}'"]
+        running: root.isOpen
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let parts = this.text.trim().split(" ");
+                let v = parseInt(parts[0]);
+                if (!isNaN(v) && !micSlider.pressed)
+                    micSlider.value = v;
+                root.micMuted = parts[1] === "1";
+            }
+        }
+    }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.isOpen
+        triggeredOnStart: true
+        onTriggered: micStatusProc.running = true
     }
 
     ColumnLayout {
@@ -288,6 +313,79 @@ ColumnLayout {
                         border.color: Theme.primary
                         border.width: 1
                     }
+                }
+            }
+        }
+
+        // --- MICROPHONE ---
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 15
+
+            Image {
+                source: root.micMuted ? "../shared/icons/mic-muted.svg" : "../shared/icons/mic.svg"
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                sourceSize.width: 20
+                sourceSize.height: 20
+                fillMode: Image.PreserveAspectFit
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    colorization: 1.0
+                    colorizationColor: Theme.primary
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        Quickshell.execDetached(["bash", "-c", "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"])
+                        micStatusProc.running = true
+                    }
+                }
+            }
+
+            Slider {
+                id: micSlider
+                Layout.fillWidth: true
+                from: 0
+                to: 100
+                value: 50
+
+                onMoved: {
+                    Quickshell.execDetached(["bash", "-c", "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ " + Math.round(value) + "%"])
+                }
+
+                background: Rectangle {
+                    x: micSlider.leftPadding
+                    y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 200
+                    implicitHeight: 6
+                    width: micSlider.availableWidth
+                    height: implicitHeight
+                    radius: 3
+                    color: Theme.background
+                    border.color: Theme.primary
+                    border.width: 1
+
+                    Rectangle {
+                        width: micSlider.visualPosition * parent.width
+                        height: parent.height
+                        color: Theme.primary
+                        radius: 3
+                    }
+                }
+
+                handle: Rectangle {
+                    x: micSlider.leftPadding + micSlider.visualPosition * (micSlider.availableWidth - width)
+                    y: micSlider.topPadding + micSlider.availableHeight / 2 - height / 2
+                    implicitWidth: 16
+                    implicitHeight: 16
+                    radius: 8
+                    color: micSlider.pressed ? Theme.background : Theme.primary
+                    border.color: Theme.primary
+                    border.width: 1
                 }
             }
         }
