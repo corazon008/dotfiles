@@ -3,6 +3,7 @@ import Quickshell.Io
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import QtQuick.Effects
 import qs.CustomTheme
 
 ColumnLayout {
@@ -95,12 +96,31 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 15
 
-            Text {
-                text: "☀ " + (index + 1)
-                color: Theme.primary
-                font.family: "monospace"
-                font.pixelSize: 18
+            RowLayout {
+                spacing: 6
                 Layout.alignment: Qt.AlignVCenter
+
+                Image {
+                    source: "../shared/icons/brightness.svg"
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    sourceSize.width: 20
+                    sourceSize.height: 20
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        colorization: 1.0
+                        colorizationColor: Theme.primary
+                    }
+                }
+
+                Text {
+                    text: "" + (index + 1)
+                    color: Theme.primary
+                    font.family: "monospace"
+                    font.pixelSize: 14
+                    Layout.alignment: Qt.AlignVCenter
+                }
             }
 
             Slider {

@@ -12,11 +12,9 @@ ColumnLayout {
     spacing: 20
 
     property bool isOpen: false
-    // All sinks as [{ id, name, desc }] and the current default one (name).
+    // All sinks as [{ id, name, desc, muted }] and the current default one (name).
     property var sinks: []
     property string defaultSink: ""
-    // Kept as a parallel list for the volume-slider Repeater.
-    property var soundIds: []
     property bool fetchTick: false
     property bool micMuted: false
 
@@ -69,12 +67,14 @@ ColumnLayout {
                 for (let line of this.text.split("\n")) {
                     if (line.startsWith("Sink #")) {
                         if (cur) next.push(cur);
-                        cur = { id: parseInt(line.replace(/[^0-9]/g, ""), 10), name: "", desc: "" };
+                        cur = { id: parseInt(line.replace(/[^0-9]/g, ""), 10), name: "", desc: "", muted: false };
                     } else if (cur) {
                         if (line.startsWith("\tName: "))
                             cur.name = line.slice(7).trim();
                         else if (line.startsWith("\tDescription: "))
                             cur.desc = line.slice(14).trim();
+                        else if (line.startsWith("\tMute: "))
+                            cur.muted = line.slice(7).trim() === "yes";
                     }
                 }
                 if (cur) next.push(cur);
@@ -83,7 +83,6 @@ ColumnLayout {
                 // Repeater isn't recreated (and re-fetched) on every poll.
                 if (JSON.stringify(next) !== JSON.stringify(root.sinks)) {
                     root.sinks = next;
-                    root.soundIds = next.map(s => s.id);
                 }
                 console.log("Sinks:", JSON.stringify(root.sinks));
                 root.syncOutput();
@@ -143,12 +142,33 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: 10
 
-            Text {
-                text: " "
-                color: Theme.primary
-                font.family: "monospace"
-                font.pixelSize: 18
+            Image {
+                source: {
+                    for (let i = 0; i < root.sinks.length; i++)
+                        if (root.sinks[i].name === root.defaultSink)
+                            return root.sinks[i].muted ? "../shared/icons/volume-muted.svg" : "../shared/icons/volume.svg"
+                    return "../shared/icons/volume.svg"
+                }
                 Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+                sourceSize.width: 20
+                sourceSize.height: 20
+                fillMode: Image.PreserveAspectFit
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    colorization: 1.0
+                    colorizationColor: Theme.primary
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        Quickshell.execDetached(["bash", "-c", "pactl set-sink-mute @DEFAULT_SINK@ toggle"])
+                        root.kickFetch()
+                    }
+                }
             }
 
             ComboBox {
@@ -245,19 +265,37 @@ ColumnLayout {
         }
 
         Repeater {
-            model: root.soundIds
+            model: root.sinks
 
             delegate: RowLayout {
                 Layout.fillWidth: true
                 spacing: 15
 
-                property int sinkId: modelData
+                property var sink: modelData
+                property int sinkId: sink.id
 
-                Text {
-                    text: " " //+ sinkId
-                    color: Theme.primary
-                    font.family: "monospace"
-                    font.pixelSize: 18
+                Image {
+                    source: sink.muted ? "../shared/icons/volume-muted.svg" : "../shared/icons/volume.svg"
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    sourceSize.width: 20
+                    sourceSize.height: 20
+                    fillMode: Image.PreserveAspectFit
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        colorization: 1.0
+                        colorizationColor: Theme.primary
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            Quickshell.execDetached(["bash", "-c", "pactl set-sink-mute " + sinkId + " toggle"])
+                            root.kickFetch()
+                        }
+                    }
                 }
 
                 Slider {
