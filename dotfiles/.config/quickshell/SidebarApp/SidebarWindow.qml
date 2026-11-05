@@ -353,15 +353,205 @@ PanelWindow {
                         spacing: 20
 
                         // LOUDNESS SLIDER
-                        SoundControls {
-                            id: soundControls
-                            isOpen: root.isOpen
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 15
+
+                            Image {
+                                source: "../shared/icons/volume.svg"
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                                sourceSize.width: 20
+                                sourceSize.height: 20
+                                fillMode: Image.PreserveAspectFit
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: Theme.primary
+                                }
+                            }
+
+                            Slider {
+                                id: volumeSlider
+                                Layout.fillWidth: true
+                                from: 0
+                                to: 100
+                                value: 50 // Default
+
+                                Process {
+                                    command: ["bash", "-c", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2 * 100)}'"]
+                                    running: root.isOpen
+                                    stdout: StdioCollector {
+                                        onStreamFinished: {
+                                            let val = parseInt(this.text.trim())
+                                            if (!isNaN(val)) volumeSlider.value = val;
+                                        }
+                                    }
+                                }
+
+                                onMoved: {
+                                    Quickshell.execDetached(["bash", "-c", "wpctl set-volume @DEFAULT_AUDIO_SINK@ " + Math.round(value) + "%"])
+                                }
+
+                                background: Rectangle {
+                                    x: volumeSlider.leftPadding
+                                    y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                    implicitWidth: 200
+                                    implicitHeight: 6
+                                    width: volumeSlider.availableWidth
+                                    height: implicitHeight
+                                    radius: 3
+                                    color: Theme.background
+                                    border.color: Theme.primary
+                                    border.width: 1
+
+                                    Rectangle {
+                                        width: volumeSlider.visualPosition * parent.width
+                                        height: parent.height
+                                        color: Theme.primary
+                                        radius: 3
+                                    }
+                                }
+
+                                handle: Rectangle {
+                                    x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                                    y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                    implicitWidth: 16
+                                    implicitHeight: 16
+                                    radius: 8
+                                    color: volumeSlider.pressed ? Theme.background : Theme.primary
+                                    border.color: Theme.primary
+                                    border.width: 1
+                                }
+                            }
                         }
 
                         // BRIGHTNESS SLIDER
-                        BrightnessControls {
-                            id: brightnessControls
-                            isOpen: root.isOpen
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 15
+
+                            Image {
+                                source: "../shared/icons/brightness.svg"
+                                Layout.alignment: Qt.AlignVCenter
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                                sourceSize.width: 20
+                                sourceSize.height: 20
+                                fillMode: Image.PreserveAspectFit
+                                layer.enabled: true
+                                layer.effect: MultiEffect {
+                                    colorization: 1.0
+                                    colorizationColor: Theme.primary
+                                }
+                            }
+
+                            Slider {
+                                id: brightnessSlider
+                                Layout.fillWidth: true
+                                from: 10 // Guaranteed Minimum 10%
+                                to: 100
+                                value: 100
+
+                                Process {
+                                    command: ["bash", "-c", "brightnessctl -m | awk -F, '{gsub(\"%\",\"\",$4); print $4}'"]
+                                    running: root.isOpen
+                                    stdout: StdioCollector {
+                                        onStreamFinished: {
+                                            let val = parseInt(this.text.trim())
+                                            if (!isNaN(val)) brightnessSlider.value = Math.max(10, val);
+                                        }
+                                    }
+                                }
+
+                                onMoved: {
+                                    Quickshell.execDetached(["bash", "-c", "brightnessctl set " + Math.round(value) + "%"])
+                                }
+
+                                background: Rectangle {
+                                    x: brightnessSlider.leftPadding
+                                    y: brightnessSlider.topPadding + brightnessSlider.availableHeight / 2 - height / 2
+                                    implicitWidth: 200
+                                    implicitHeight: 6
+                                    width: brightnessSlider.availableWidth
+                                    height: implicitHeight
+                                    radius: 3
+                                    color: Theme.background
+                                    border.color: Theme.primary
+                                    border.width: 1
+
+                                    Rectangle {
+                                        width: brightnessSlider.visualPosition * parent.width
+                                        height: parent.height
+                                        color: Theme.primary
+                                        radius: 3
+                                    }
+                                }
+
+                                handle: Rectangle {
+                                    x: brightnessSlider.leftPadding + brightnessSlider.visualPosition * (brightnessSlider.availableWidth - width)
+                                    y: brightnessSlider.topPadding + brightnessSlider.availableHeight / 2 - height / 2
+                                    implicitWidth: 16
+                                    implicitHeight: 16
+                                    radius: 8
+                                    color: brightnessSlider.pressed ? Theme.background : Theme.primary
+                                    border.color: Theme.primary
+                                    border.width: 1
+                                }
+                            }
+                        }
+
+                        // BLUE LIGHT FILTER (HYPRSUNSET) TOGGLE
+                        // Temporary status switch mirroring the SUPER+SHIFT+H
+                        // keybinding: it just starts/kills hyprsunset, nothing
+                        // is persisted, so the state is gone after a restart.
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: root.isHyprsunsetInstalled
+
+                            Text {
+                                text: "Blue Light Filter"
+                                color: Theme.primary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 16
+                            }
+                            Item { Layout.fillWidth: true }
+                            ML4WSwitch {
+                                id: hyprsunsetSwitch
+                                property bool ready: false
+                                // The running process is the only state there is.
+                                Process {
+                                    id: hyprsunsetStateProc
+                                    command: ["bash", "-c", "pgrep -x hyprsunset > /dev/null && echo 1 || echo 0"]
+                                    stdout: StdioCollector {
+                                        onStreamFinished: {
+                                            hyprsunsetSwitch.checked = (this.text.trim() === "1")
+                                            hyprsunsetSwitch.ready = true
+                                        }
+                                    }
+                                }
+                                // Re-read while the sidebar is open so the switch
+                                // tracks external toggles (the keybinding) live.
+                                Timer {
+                                    interval: 1000
+                                    repeat: true
+                                    running: root.isOpen
+                                    triggeredOnStart: true
+                                    onTriggered: hyprsunsetStateProc.running = true
+                                }
+                                onClicked: {
+                                    if (!ready) return;
+                                    // Absolute command matching the switch's
+                                    // post-click position instead of a blind
+                                    // toggle, so it can't get out of sync.
+                                    let cmd = checked
+                                        ? "pgrep -x hyprsunset > /dev/null || setsid -f hyprsunset > /dev/null 2>&1"
+                                        : "pkill -x hyprsunset"
+                                    Quickshell.execDetached(["bash", "-c", cmd])
+                                }
+                            }
+                            Item { implicitWidth: 28 }
                         }
                     }
 
@@ -774,13 +964,11 @@ PanelWindow {
                             id: dockSwitch
                             property bool ready: false
                             // Read the current state from the "enabled" flag in
-                            // the master file: the ml4w-dock override when it
-                            // exists, otherwise the shipped dock.json. A missing
-                            // file or flag counts as on, matching the dock's own
-                            // default.
+                            // the dock's settings file. A missing file or flag
+                            // counts as on, matching the dock's own default.
                             Process {
-                                command: ["bash", "-c", "test -f ~/.config/ml4w/settings/dock-disabled && echo 0 || echo 1"]
-                                running: root.isOpen
+                                id: dockStateProc
+                                command: ["bash", "-c", "grep -q '\"enabled\"[[:space:]]*:[[:space:]]*false' ~/.config/ml4w-dock/config.json 2>/dev/null && echo 0 || echo 1"]
                                 stdout: StdioCollector {
                                     onStreamFinished: {
                                         console.log("Test for Dock: " + this.text.trim())
@@ -841,13 +1029,11 @@ PanelWindow {
                             id: dockAutohideSwitch
                             property bool ready: false
                             // Read the current state from the "autohide" flag in
-                            // the master file: the ml4w-dock override when it
-                            // exists, otherwise the shipped dock.json. A missing
-                            // file or flag counts as off, matching the dock's own
-                            // default.
+                            // the dock's settings file. A missing file or flag
+                            // counts as off, matching the dock's own default.
                             Process {
-                                command: ["bash", "-c", "test -f ~/.config/ml4w/settings/dock-autohide && echo 1 || echo 0"]
-                                running: root.isOpen
+                                id: dockAutohideProc
+                                command: ["bash", "-c", "grep -q '\"autohide\"[[:space:]]*:[[:space:]]*true' ~/.config/ml4w-dock/config.json 2>/dev/null && echo 1 || echo 0"]
                                 stdout: StdioCollector {
                                     onStreamFinished: {
                                         console.log("Test for Dock Autohide: " + this.text.trim())
