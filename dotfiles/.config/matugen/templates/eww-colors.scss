@@ -1,0 +1,12 @@
+// Eww colors
+// Generated with Matugen
+$surface: {{colors.surface.default.hex}};
+$surface_container: {{colors.surface_container.default.hex}};
+$surface_alpha: {{colors.surface.default.rgba | set_alpha: 0.55}};
+$on_surface: {{colors.on_surface.default.hex}};
+$on_surface_variant: {{colors.on_surface_variant.default.hex}};
+$outline_variant: {{colors.outline_variant.default.hex}};
+$primary: {{colors.primary.default.hex}};
+$secondary: {{colors.secondary.default.hex}};
+$tertiary: {{colors.tertiary.default.hex}};
+$error: {{colors.error.default.hex}};
